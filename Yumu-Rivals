@@ -24,9 +24,9 @@ local Window = Library:CreateWindow({
 
 local Tabs = {
     Main = Window:AddTab('Main'),
-    ['Visuals'] = Window:AddTab('Visuals'),
-    ['Misc'] = Window:AddTab('Misc'),
-    ['Setting'] = Window:AddTab('Setting')
+    Visuals = Window:AddTab('Visuals'),
+    Misc = Window:AddTab('Misc'),
+    Setting = Window:AddTab('Setting')
 }
 
 -- ==========================================
@@ -351,9 +351,9 @@ do
 end
 
 -- ==========================================
--- Main 탭 설정
+-- 1. Main 탭 설정 (Ragebot & No Cooldown)
 -- ==========================================
-local MainGroup = Tabs.Main:AddLeftGroupbox('Ragebot Settings')
+local MainGroup = Tabs.Main:AddLeftGroupbox('Combat Features')
 
 MainGroup:AddToggle('EnableRagebot', {
     Text = 'Enable Ragebot',
@@ -366,51 +366,65 @@ MainGroup:AddToggle('EnableRagebot', {
     end
 })
 
--- ==========================================
--- 1. Device Spoofing (Misc 탭)
--- ==========================================
-local Group = Tabs.Misc:AddLeftGroupbox('Device Spoofing')
-local SetControlsRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Replication"):WaitForChild("Fighter"):WaitForChild("SetControls")
+local originalWeaponValues = {}
 
-Group:AddDropdown('DeviceDropdown', {
-    Values = { 'PC (Mouse & Keyboard)', 'Mobile (Touch)', 'Controller (Gamepad)', 'VR' },
-    Default = 1,
-    Multi = false,
-    Text = 'Device Spoof',
-    Tooltip = 'Rivals 서버로 전송할 입력 기기를 변경합니다.',
+MainGroup:AddToggle('RivalsNoCDToggle', {
+    Text = 'No Cooldown (Fast Fire)',
+    Default = false,
+    Tooltip = '무기 쿨다운 및 연사 속도 제한을 0으로 설정합니다.',
     Callback = function(Value)
-        local TargetDevice = "MouseKeyboard"
+        getgenv().RivalsNoCD = Value
+        if Value then
+            task.spawn(function()
+                while getgenv().RivalsNoCD do
+                    task.wait(2)
+                    pcall(function()
+                        for _, v in pairs(getgc(true)) do
+                            if type(v) == "table" then
+                                if rawget(v, "ShootCooldown") and not originalWeaponValues[v] then
+                                    originalWeaponValues[v] = {Key = "ShootCooldown", Val = v.ShootCooldown}
+                                end
+                                if rawget(v, "FireRate") and not originalWeaponValues[v] then
+                                    originalWeaponValues[v] = {Key = "FireRate", Val = v.FireRate}
+                                end
+                                if rawget(v, "Cooldown") and not originalWeaponValues[v] then
+                                    originalWeaponValues[v] = {Key = "Cooldown", Val = v.Cooldown}
+                                end
 
-        if Value:find("PC") then
-            TargetDevice = "MouseKeyboard"
-        elseif Value:find("Mobile") then
-            TargetDevice = "Touch"
-        elseif Value:find("Controller") then
-            TargetDevice = "Gamepad"
-        elseif Value:find("VR") then
-            TargetDevice = "VR"
+                                if rawget(v, "ShootCooldown") then v.ShootCooldown = 0 end
+                                if rawget(v, "FireRate") then v.FireRate = 0 end
+                                if rawget(v, "Cooldown") then v.Cooldown = 0 end
+                            end
+                        end
+                    end)
+                end
+            end)
+        else
+            pcall(function()
+                for tbl, info in pairs(originalWeaponValues) do
+                    if tbl and type(tbl) == "table" then
+                        tbl[info.Key] = info.Val
+                    end
+                end
+                table.clear(originalWeaponValues)
+            end)
         end
-
-        SetControlsRemote:FireServer("MouseKeyboard")
-        task.wait(0.1)
-        SetControlsRemote:FireServer(TargetDevice)
     end
 })
 
-Group:AddButton({
-    Text = 'Apply Selected Device',
-    Func = function()
-        if Options and Options.DeviceDropdown then
-            Options.DeviceDropdown:OnChanged(Options.DeviceDropdown.Value)
-        end
-    end,
-    DoubleClick = false,
-    Tooltip = '선택한 디바이스 신호를 서버로 즉시 재전송합니다.'
-})
+-- ==========================================
+-- 2. Visuals 탭 (ESP & Skybox)
+-- ==========================================
+local ESPGroup = Tabs.Visuals:AddLeftGroupbox('ESP')
 
--- ==========================================
--- 2. Skybox (Visuals 탭)
--- ==========================================
+ESPGroup:AddToggle('ESPBox', { Text = 'Box ESP', Default = false })
+ESPGroup:AddToggle('ESPName', { Text = 'Name ESP', Default = false })
+ESPGroup:AddToggle('ESPHealth', { Text = 'Health ESP', Default = false })
+ESPGroup:AddToggle('ESPDistance', { Text = 'Distance ESP', Default = false })
+ESPGroup:AddToggle('ESPTracer', { Text = 'Tracer ESP', Default = false })
+ESPGroup:AddToggle('ESPSkeleton', { Text = 'Skeleton ESP', Default = false })
+ESPGroup:AddToggle('ESPChams', { Text = 'Chams ESP', Default = false })
+
 local SkyboxGroup = Tabs.Visuals:AddRightGroupbox('Skybox')
 
 local function GetSky()
@@ -459,8 +473,47 @@ SkyboxGroup:AddDropdown('SkyboxPresetDropdown', {
 })
 
 -- ==========================================
--- 3. Skin Changer (Misc 탭 - 수정 완료)
+-- 3. Misc 탭 (Device Spoof & Skin Changer)
 -- ==========================================
+local Group = Tabs.Misc:AddLeftGroupbox('Device Spoofing')
+local SetControlsRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Replication"):WaitForChild("Fighter"):WaitForChild("SetControls")
+
+Group:AddDropdown('DeviceDropdown', {
+    Values = { 'PC (Mouse & Keyboard)', 'Mobile (Touch)', 'Controller (Gamepad)', 'VR' },
+    Default = 1,
+    Multi = false,
+    Text = 'Device Spoof',
+    Tooltip = 'Rivals 서버로 전송할 입력 기기를 변경합니다.',
+    Callback = function(Value)
+        local TargetDevice = "MouseKeyboard"
+
+        if Value:find("PC") then
+            TargetDevice = "MouseKeyboard"
+        elseif Value:find("Mobile") then
+            TargetDevice = "Touch"
+        elseif Value:find("Controller") then
+            TargetDevice = "Gamepad"
+        elseif Value:find("VR") then
+            TargetDevice = "VR"
+        end
+
+        SetControlsRemote:FireServer("MouseKeyboard")
+        task.wait(0.1)
+        SetControlsRemote:FireServer(TargetDevice)
+    end
+})
+
+Group:AddButton({
+    Text = 'Apply Selected Device',
+    Func = function()
+        if Options and Options.DeviceDropdown then
+            Options.DeviceDropdown:OnChanged(Options.DeviceDropdown.Value)
+        end
+    end,
+    DoubleClick = false,
+    Tooltip = '선택한 디바이스 신호를 서버로 즉시 재전송합니다.'
+})
+
 local SkinBox = Tabs.Misc:AddRightGroupbox('Skin Changer')
 SkinBox:AddButton('Unlock All', function()
     task.spawn(function()
@@ -499,8 +552,6 @@ SkinBox:AddButton('Unlock All', function()
 
             getgenv().SkinChangerLoaded = true
 
-            local equipped, favorites = {}, {}
-
             CosmeticLibrary.OwnsCosmeticNormally = function() return true end
             CosmeticLibrary.OwnsCosmeticUniversally = function() return true end
             CosmeticLibrary.OwnsCosmeticForWeapon = function() return true end
@@ -534,19 +585,8 @@ SkinBox:AddButton('Unlock All', function()
 end)
 
 -- ==========================================
--- 4. ESP UI 토글 설정 (Visuals 탭)
+-- 4. ESP Render Loop
 -- ==========================================
-local ESPGroup = Tabs.Visuals:AddLeftGroupbox('ESP')
-
-ESPGroup:AddToggle('ESPBox', { Text = 'Box ESP', Default = false })
-ESPGroup:AddToggle('ESPName', { Text = 'Name ESP', Default = false })
-ESPGroup:AddToggle('ESPHealth', { Text = 'Health ESP', Default = false })
-ESPGroup:AddToggle('ESPDistance', { Text = 'Distance ESP', Default = false })
-ESPGroup:AddToggle('ESPTracer', { Text = 'Tracer ESP', Default = false })
-ESPGroup:AddToggle('ESPSkeleton', { Text = 'Skeleton ESP', Default = false })
-ESPGroup:AddToggle('ESPChams', { Text = 'Chams ESP', Default = false })
-
--- ESP 데이터 관리
 local espData = {}
 
 local function addESP(p)
@@ -591,12 +631,10 @@ Players.PlayerRemoving:Connect(function(p)
     end
 end)
 
--- 안전한 토글 상태 체크 함수
 local function IsToggleActive(toggleName)
     return Toggles and Toggles[toggleName] and Toggles[toggleName].Value == true
 end
 
--- Render Loop
 RunService.RenderStepped:Connect(function()
     local Camera = Workspace.CurrentCamera
     if not Camera then return end
@@ -628,12 +666,8 @@ RunService.RenderStepped:Connect(function()
         end
         
         if isAlive then
-            -- Box ESP
-            if IsToggleActive("ESPBox") then 
-                d.Box.Size = boxSize; d.Box.Position = boxPos; d.Box.Visible = true 
-            else d.Box.Visible = false end
+            if IsToggleActive("ESPBox") then d.Box.Size = boxSize; d.Box.Position = boxPos; d.Box.Visible = true else d.Box.Visible = false end
             
-            -- Health ESP
             if IsToggleActive("ESPHealth") then
                 local maxH = math.max(c.Humanoid.MaxHealth, 1)
                 local h = math.clamp(c.Humanoid.Health / maxH, 0, 1)
@@ -646,42 +680,23 @@ RunService.RenderStepped:Connect(function()
                 d.HpBg.Visible = false; d.HealthBar.Visible = false; d.HealthText.Visible = false 
             end
             
-            -- Name ESP
-            if IsToggleActive("ESPName") then
-                d.NameText.Text = p.Name; d.NameText.Position = Vector2.new(boxPos.X + width/2, top.Y - 15); d.NameText.Visible = true
-            else d.NameText.Visible = false end
+            if IsToggleActive("ESPName") then d.NameText.Text = p.Name; d.NameText.Position = Vector2.new(boxPos.X + width/2, top.Y - 15); d.NameText.Visible = true else d.NameText.Visible = false end
+            if IsToggleActive("ESPDistance") then local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude); d.DistText.Text = tostring(dist) .. "m"; d.DistText.Position = Vector2.new(boxPos.X + width/2, bottom.Y + 2); d.DistText.Visible = true else d.DistText.Visible = false end
+            if IsToggleActive("ESPTracer") then d.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y); d.Tracer.To = Vector2.new(rootPos.X, bottom.Y); d.Tracer.Visible = true else d.Tracer.Visible = false end
             
-            -- Distance ESP
-            if IsToggleActive("ESPDistance") then
-                local dist = math.floor((Camera.CFrame.Position - root.Position).Magnitude)
-                d.DistText.Text = tostring(dist) .. "m"; d.DistText.Position = Vector2.new(boxPos.X + width/2, bottom.Y + 2); d.DistText.Visible = true
-            else d.DistText.Visible = false end
-            
-            -- Tracer ESP
-            if IsToggleActive("ESPTracer") then
-                d.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y); d.Tracer.To = Vector2.new(rootPos.X, bottom.Y); d.Tracer.Visible = true
-            else d.Tracer.Visible = false end
-            
-            -- Skeleton ESP
             if IsToggleActive("ESPSkeleton") then
                 for _, s in pairs(d.Skeleton) do
                     local p1, p2 = c:FindFirstChild(s[1]), c:FindFirstChild(s[2])
                     if p1 and p2 then
                         local v1, o1 = Camera:WorldToViewportPoint(p1.Position)
                         local v2, o2 = Camera:WorldToViewportPoint(p2.Position)
-                        if o1 and o2 then 
-                            s[3].From = Vector2.new(v1.X, v1.Y)
-                            s[3].To = Vector2.new(v2.X, v2.Y)
-                            s[3].Visible = true
-                            s[3].Color = Color3.new(1, 1, 1) 
-                        else s[3].Visible = false end
+                        if o1 and o2 then s[3].From = Vector2.new(v1.X, v1.Y); s[3].To = Vector2.new(v2.X, v2.Y); s[3].Visible = true; s[3].Color = Color3.new(1, 1, 1) else s[3].Visible = false end
                     else s[3].Visible = false end
                 end
             else 
                 for _, s in pairs(d.Skeleton) do s[3].Visible = false end 
             end
             
-            -- Chams ESP
             local highlight = c:FindFirstChild("AntiHubChams")
             if IsToggleActive("ESPChams") then
                 if not highlight then
