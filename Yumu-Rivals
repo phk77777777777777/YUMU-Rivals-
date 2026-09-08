@@ -30,7 +30,7 @@ local Tabs = {
 }
 
 -- ==========================================
--- 0. Ragebot UI (크로스헤어 & 텍스트 연출)
+-- Ragebot Custom UI (Crosshair & Watermark)
 -- ==========================================
 local RageUIGui = Instance.new("ScreenGui", PlayerGui)
 RageUIGui.Name = "HoNyangRageUI"
@@ -99,7 +99,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ==========================================
--- 0. Ragebot 메커니즘 & 딥싱크 (Desync)
+-- Ragebot 메커니즘 & 딥싱크 (Desync)
 -- ==========================================
 local __a1b2c3 = setmetatable({}, {
     __index = function(__d4e5f6, __g7h8i9)
@@ -298,7 +298,7 @@ do
         self.__curr = __c3d4e5
 
         self.__conn2 = __y5z6a7.Heartbeat:Connect(function()
-            if not self.__desync me then return end
+            if not self.__desync then return end
             local __f6g7h8 = __z2a3b4.__root
             if not __f6g7h8 then return end
 
@@ -351,22 +351,24 @@ do
 end
 
 -- ==========================================
--- 0. Main 탭 그룹박스 설정 (Ragebot)
+-- Main 탭 설정
 -- ==========================================
-local MainRageGroup = Tabs.Main:AddLeftGroupbox('Ragebot')
+local MainGroup = Tabs.Main:AddLeftGroupbox('Ragebot Settings')
 
-MainRageGroup:AddToggle('RagebotToggle', {
+MainGroup:AddToggle('EnableRagebot', {
     Text = 'Enable Ragebot',
     Default = false,
-    Tooltip = 'Ragebot 기능 및 커스텀 크로스헤어를 활성화합니다.',
+    Tooltip = 'Ragebot 기능 및 크로스헤어 UI를 활성화합니다.',
     Callback = function(Value)
-        if __p6q7r8.__s9t0u1 then
-            __p6q7r8.__s9t0u1:SetState(Value)
+        if getgenv().__s9t0u1 and getgenv().__s9t0u1.SetState then
+            getgenv().__s9t0u1:SetState(Value)
         end
     end
 })
 
+-- ==========================================
 -- 1. Device Spoofing (Misc 탭)
+-- ==========================================
 local Group = Tabs.Misc:AddLeftGroupbox('Device Spoofing')
 local SetControlsRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Replication"):WaitForChild("Fighter"):WaitForChild("SetControls")
 
@@ -406,7 +408,9 @@ Group:AddButton({
     Tooltip = '선택한 디바이스 신호를 서버로 즉시 재전송합니다.'
 })
 
+-- ==========================================
 -- 2. Skybox (Visuals 탭)
+-- ==========================================
 local SkyboxGroup = Tabs.Visuals:AddRightGroupbox('Skybox')
 
 local function GetSky()
@@ -454,7 +458,9 @@ SkyboxGroup:AddDropdown('SkyboxPresetDropdown', {
     end
 })
 
+-- ==========================================
 -- 3. Skin Changer (Misc 탭)
+-- ==========================================
 local SkinBox = Tabs.Misc:AddRightGroupbox('Skin Changer')
 SkinBox:AddButton('Unlock All', function()
     task.spawn(function()
@@ -669,7 +675,7 @@ if viewModelModule then
             if cosmetics.Charm then replicatedData[dataKey][ReplicatedClass:ToEnum("Charm")] = cosmetics.Charm end
         end
         local result = originalNew(replicatedData, clientItem)
-        if weaponPlayer == player and equipped[weaponName] and equipped[weaponName].Wrap and result._UpdateWrap then
+        if weaponPlayer == player and equipped[weaponName] and equipped[weaponName].Wrap and result._UpdateWrap me
             result:_UpdateWrap()
             task.delay(0.1, function() if not result._destroyed then result:_UpdateWrap() end end)
         end
@@ -737,7 +743,9 @@ end
     end)
 end)
 
+-- ==========================================
 -- 4. ESP UI 토글 설정 (Visuals 탭)
+-- ==========================================
 local ESPGroup = Tabs.Visuals:AddLeftGroupbox('ESP')
 
 ESPGroup:AddToggle('ESPBox', { Text = 'Box ESP', Default = false })
