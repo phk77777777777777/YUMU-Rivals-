@@ -353,9 +353,9 @@ end
 -- ==========================================
 -- 1. Main 탭 설정 (Ragebot & No Cooldown)
 -- ==========================================
-local MainGroup = Tabs.Main:AddLeftGroupbox('Combat Features')
+local MainGroup = Tabs.Main:AddLeftGroupbox('Combat')
 
-MainGroup:AddToggle('EnableRagebot', {
+MainGroup:AddToggle('Ragebot', {
     Text = 'Enable Ragebot',
     Default = false,
     Tooltip = 'Ragebot 기능 및 크로스헤어 UI를 활성화합니다.',
@@ -369,9 +369,9 @@ MainGroup:AddToggle('EnableRagebot', {
 local originalWeaponValues = {}
 
 MainGroup:AddToggle('RivalsNoCDToggle', {
-    Text = 'No Cooldown (Fast Fire)',
+    Text = 'Triggerbot',
     Default = false,
-    Tooltip = '무기 쿨다운 및 연사 속도 제한을 0으로 설정합니다.',
+    Tooltip = 'Triggerbot',
     Callback = function(Value)
         getgenv().RivalsNoCD = Value
         if Value then
