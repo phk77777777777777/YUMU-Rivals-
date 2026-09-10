@@ -356,9 +356,9 @@ end
 local MainGroup = Tabs.Main:AddLeftGroupbox('Combat')
 
 MainGroup:AddToggle('Ragebot', {
-    Text = 'Enable Ragebot',
+    Text = 'Ragebot',
     Default = false,
-    Tooltip = 'Ragebot 기능 및 크로스헤어 UI를 활성화합니다.',
+    Tooltip = 'Ragebot enabled',
     Callback = function(Value)
         if getgenv().__s9t0u1 and getgenv().__s9t0u1.SetState then
             getgenv().__s9t0u1:SetState(Value)
