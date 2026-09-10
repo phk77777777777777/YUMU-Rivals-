@@ -938,7 +938,7 @@ end
 end)
 
 -- Tabs.Main에 Aimbot 그룹박스 생성
-local AimbotGroup = Tabs.Main:AddLeftGroupbox('에임봇 (Aimbot)')
+local AimbotGroup = Tabs.Main:AddLeftGroupbox('Aimbot')
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -973,13 +973,13 @@ end)
 
 -- 2. UI 조작 컨트롤러 (Toggles / Options)
 AimbotGroup:AddToggle('AimbotToggle', {
-    Text = '에임봇 활성화 (Aimbot)',
+    Text = 'Aimbot enabled',
     Default = false,
-    Tooltip = 'FOV 범위 내 가장 가까운 적에게 에임을 고정합니다.'
+    Tooltip = 'aimbot enabled'
 })
 
 AimbotGroup:AddToggle('ShowFOVToggle', {
-    Text = 'FOV 원 표시',
+    Text = 'FOV',
     Default = false,
     Callback = function(Value)
         FOVFrame.Visible = Value
@@ -987,7 +987,7 @@ AimbotGroup:AddToggle('ShowFOVToggle', {
 })
 
 AimbotGroup:AddSlider('FOVSlider', {
-    Text = 'FOV 크기',
+    Text = 'FOV size',
     Default = 150,
     Min = 50,
     Max = 500,
